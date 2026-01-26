@@ -3,162 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Hogar - Privado</title>
+    <title>Sistema de Gastos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans">
+<body class="bg-slate-100 min-h-screen">
 
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-black text-slate-800">BIENVENIDO</h2>
-                <p class="text-slate-400 text-sm">Control de Gastos Familiar</p>
-            </div>
-            
-            <div class="space-y-4">
-                <input type="email" id="userEmail" class="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all" placeholder="Correo electrónico">
-                <input type="password" id="userPass" class="w-full border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all" placeholder="Clave de acceso">
-                
-                <button onclick="validarAcceso()" id="btnLogin" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg active:scale-95 transition-all">
-                    INICIAR SESIÓN
-                </button>
-            </div>
-            <p id="errorMsg" class="text-red-500 mt-6 hidden text-center text-sm font-bold animate-bounce">❌ Datos incorrectos</p>
+            <h2 class="text-2xl font-black text-center mb-6">ACCESO</h2>
+            <input type="email" id="userEmail" class="w-full border p-4 rounded-xl mb-4" placeholder="Email">
+            <input type="password" id="userPass" class="w-full border p-4 rounded-xl mb-4" placeholder="Clave">
+            <button onclick="validarAcceso()" id="btnLogin" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">ENTRAR</button>
+            <p id="errorMsg" class="text-red-500 mt-4 hidden text-center font-bold italic">Datos incorrectos</p>
         </div>
     </div>
 
-    <div id="mainContent" class="hidden max-w-md mx-auto bg-white min-h-screen shadow-xl flex flex-col">
-        <header class="bg-blue-600 text-white p-6 shadow-lg flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black italic">MIS GASTOS</h1>
-                <p id="userName" class="text-xs font-medium opacity-90"></p>
-            </div>
-            <button onclick="cerrarSesion()" class="bg-blue-800 text-[10px] px-3 py-2 rounded-xl font-bold uppercase">Salir</button>
+    <div id="mainContent" class="hidden max-w-lg mx-auto bg-white min-h-screen shadow-lg">
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <span class="font-bold uppercase">Nuevo Registro</span>
+            <button onclick="cerrarSesion()" class="text-xs bg-blue-800 px-2 py-1 rounded">Salir</button>
         </header>
 
-        <main class="p-6 space-y-8">
-            <form id="formGasto" class="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
-                <h3 class="font-bold text-slate-700 mb-2">Nuevo Registro</h3>
-                <select id="categoria" class="w-full p-4 rounded-2xl border-none bg-white shadow-sm text-sm">
-                    <option>Alimentación</option>
-                    <option>Servicios</option>
-                    <option>Transporte</option>
-                    <option>Salud</option>
-                    <option>Ocio</option>
-                </select>
-                <input type="number" id="monto" required step="0.01" class="w-full p-4 rounded-2xl border-none bg-white shadow-sm" placeholder="Monto (0.00)">
-                <button type="submit" id="btnGuardar" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl hover:bg-green-600 transition-all shadow-md">
-                    REGISTRAR GASTO
-                </button>
-            </form>
-
+        <form id="formGasto" class="p-4 space-y-4">
             <div>
-                <h3 class="font-bold text-slate-700 mb-4 italic">Historial Reciente</h3>
-                <div id="listaGastos" class="space-y-3">
-                    <p class="text-center text-slate-300 py-10">Cargando...</p>
+                <label class="text-xs font-bold text-gray-500 uppercase">Fecha</label>
+                <input type="datetime-local" id="fecha" required class="w-full p-3 border rounded-xl">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Usuario</label>
+                    <input type="text" id="usuarioDisplay" readonly class="w-full p-3 border rounded-xl bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Tipo</label>
+                    <select id="categoria" class="w-full p-3 border rounded-xl">
+                        <option>Alimentos</option><option>Servicios</option><option>Transporte</option><option>Otros</option>
+                    </select>
                 </div>
             </div>
-        </main>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs font-bold text-blue-600 uppercase">USD ($)</label>
+                    <input type="number" id="usd" step="0.01" readonly class="w-full p-3 border-2 rounded-xl bg-gray-50 font-bold">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-green-600 uppercase">VES (Bs)</label>
+                    <input type="text" id="ves" oninput="calcularVes()" class="w-full p-3 border border-blue-500 rounded-xl font-bold">
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Observación</label>
+                <input type="text" id="observacion" class="w-full p-3 border rounded-xl" placeholder="Gasto de...">
+            </div>
+
+            <div class="border-2 border-dashed p-4 rounded-xl text-center bg-gray-50">
+                <label class="cursor-pointer">
+                    <span class="text-sm font-bold text-blue-600">📷 Seleccionar comprobante</span>
+                    <input type="file" id="archivo" accept="image/*" class="hidden" onchange="procesarImagen(this)">
+                </label>
+                <img id="preview" class="hidden mt-2 max-h-32 mx-auto rounded shadow">
+            </div>
+
+            <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest">Guardar Gasto</button>
+        </form>
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbweOpCVI2H4Bee6c0_cj8MTkgXEhFdm0_-zRvLKLyQHuJeWx0_TWN1vnDd0Bzy6ve2zYw/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzd_dOfltnC7AzihyR-bdor6mQIQcGXxbdCvTGjsFFw7xSOR0G1Os3uZGsAz_dZkhaStw/exec";
+        let tasaActual = 0;
+        let imgB64 = null;
+        let imgMime = "";
 
-        window.onload = () => {
-            const session = localStorage.getItem('gastoSession');
-            if (session) {
-                const user = JSON.parse(session);
-                mostrarApp(user.nombre);
-            }
+        window.onload = async () => {
+            const sesion = localStorage.getItem('session');
+            if(sesion) mostrarApp(JSON.parse(sesion).nombre);
+            
+            // Poner fecha/hora actual
+            const ahora = new Date();
+            ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+            document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
+
+            // Obtener tasa
+            const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
+            const data = await res.json();
+            tasaActual = data.tasa;
         };
+
+        function calcularVes() {
+            const val = document.getElementById('ves').value;
+            document.getElementById('usd').value = val ? (val / tasaActual).toFixed(2) : "";
+        }
+
+        function procesarImagen(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imgB64 = e.target.result;
+                    imgMime = input.files[0].type;
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         async function validarAcceso() {
             const email = document.getElementById('userEmail').value;
             const clave = document.getElementById('userPass').value;
-            const btn = document.getElementById('btnLogin');
-            const error = document.getElementById('errorMsg');
-
-            if(!email || !clave) return;
-
-            btn.disabled = true;
-            btn.innerText = "VERIFICANDO...";
-            error.classList.add('hidden');
-
-            try {
-                const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    localStorage.setItem('gastoSession', JSON.stringify(data));
-                    mostrarApp(data.nombre);
-                } else {
-                    error.classList.remove('hidden');
-                }
-            } catch (e) {
-                alert("Error de conexión");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "INICIAR SESIÓN";
-            }
+            const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
+            const data = await res.json();
+            if(data.status === 'success') {
+                localStorage.setItem('session', JSON.stringify(data));
+                mostrarApp(data.nombre);
+            } else { document.getElementById('errorMsg').classList.remove('hidden'); }
         }
 
         function mostrarApp(nombre) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('userName').innerText = `Sesión: ${nombre}`;
-            cargarGastos();
+            document.getElementById('usuarioDisplay').value = nombre;
         }
 
-        function cerrarSesion() {
-            localStorage.removeItem('gastoSession');
-            location.reload();
-        }
+        function cerrarSesion() { localStorage.removeItem('session'); location.reload(); }
 
-        // Cargar Gastos
-        async function cargarGastos() {
-            const container = document.getElementById('listaGastos');
-            try {
-                const res = await fetch(WEB_APP_URL);
-                const data = await res.json();
-                container.innerHTML = "";
-                data.slice(-8).reverse().forEach(f => {
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-50 flex justify-between items-center";
-                    el.innerHTML = `<div><p class="font-bold text-slate-800 text-sm">${f[1]}</p><p class="text-[10px] text-slate-400 uppercase">${new Date(f[0]).toLocaleDateString()}</p></div><div class="text-right"><p class="text-blue-600 font-black">$${f[2]}</p><p class="text-[9px] text-slate-300 italic">Por ${f[4] || 'Admin'}</p></div>`;
-                    container.appendChild(el);
-                });
-            } catch(e) { container.innerHTML = "Error al cargar"; }
-        }
-
-        // Guardar Gasto
         document.getElementById('formGasto').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnGuardar');
-            const user = JSON.parse(localStorage.getItem('gastoSession'));
-            
+            btn.disabled = true; btn.innerText = "REGISTRANDO...";
+
             const payload = {
+                fecha: document.getElementById('fecha').value,
+                usuario: document.getElementById('usuarioDisplay').value,
+                usd: document.getElementById('usd').value,
+                ves: document.getElementById('ves').value,
                 categoria: document.getElementById('categoria').value,
-                monto: document.getElementById('monto').value,
-                usuario: user.nombre
+                observacion: document.getElementById('observacion').value,
+                archivoB64: imgB64,
+                mimeType: imgMime
             };
 
-            btn.disabled = true;
-            btn.innerText = "GUARDANDO...";
-
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                });
-                document.getElementById('monto').value = "";
-                alert("Gasto guardado!");
-                cargarGastos();
-            } catch(e) { alert("Error"); }
-            finally { 
-                btn.disabled = false; 
-                btn.innerText = "REGISTRAR GASTO";
-            }
+            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("¡Registro guardado con éxito!");
+            location.reload();
         });
     </script>
 </body>
