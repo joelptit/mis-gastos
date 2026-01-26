@@ -93,8 +93,9 @@
         };
 
         function calcularVes() {
-            const val = document.getElementById('ves').value;
-            document.getElementById('usd').value = val ? (val / tasaActual).toFixed(2) : "";
+            const valor = document.getElementById('ves').value;
+            let ves = valor ? (valor / tasaActual).toFixed(2) : "";
+            document.getElementById('usd').value = ves ? ves.toFixed(2) : "";
         }
 
         function procesarImagen(input) {
