@@ -93,9 +93,18 @@
         };
 
         function calcularUsd() {
-            const valor = document.getElementById('ves').value;
+            const valorVes = document.getElementById('ves').value;
+            const campoUsd = document.getElementById('usd');
+            
+            if (valorVes && tasaActual > 0) {
+                const resultado = parseFloat(valorVes) / tasaActual;
+                campoUsd.value = resultado.toFixed(2);
+            } else {
+                campoUsd.value = "";
+            }            
+            /*const valor = document.getElementById('ves').value;
             let ves = valor ? (valor / tasaActual).toFixed(2) : "";
-            document.getElementById('usd').value = ves ? ves.toFixed(2) : "";
+            document.getElementById('usd').value = ves ? ves.toFixed(2) : "";*/
         }
 
         function procesarImagen(input) {
