@@ -118,7 +118,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUBtnUly2TxPQDYFJ7sApZWlklYkN3E6cGvxWlZs0OgnUb3km0wTmBtPdZwqE1zL-SwQ/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxT8TL5YYo1v7C_JMhr6wUG2bLT_z99jogXc0XKZjQYHxa2Uy3y39w0WHo9lXFseSKgYw/exec";
         let tasaActual = 0;
         let imgB64 = null;
         let imgMime = "";
@@ -167,7 +167,7 @@ function procesarImagen(input) {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400; // Reducimos a un tamaño razonable
+                const MAX_WIDTH = 800; // Reducimos a un tamaño razonable
                 let width = img.width;
                 let height = img.height;
 
@@ -281,29 +281,42 @@ async function cargarHistorial() {
     }
 }
 
-        document.getElementById('formGasto').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnGuardar');
-            btn.disabled = true; btn.innerText = "REGISTRANDO...";
-            const payload = {
-                fecha: document.getElementById('fecha').value,
-                usuario: document.getElementById('usuarioDisplay').value,
-                usd: document.getElementById('usd').value,
-                ves: document.getElementById('ves').value,
-                categoria: document.getElementById('categoria').value,
-                observacion: document.getElementById('observacion').value,
-                archivoB64: imgB64,
-                mimeType: imgMime
-            };
-            try {
-                await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-                alert("¡Registro enviado con éxito!");
-                location.reload();
-            } catch(err) {
-                alert("Error al enviar");
-                btn.disabled = false; btn.innerText = "Guardar Gasto";
-            }
+document.getElementById('formGasto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnGuardar');
+    btn.disabled = true; 
+    btn.innerText = "REGISTRANDO...";
+
+    const payload = {
+        fecha: document.getElementById('fecha').value,
+        usuario: document.getElementById('usuarioDisplay').value,
+        usd: document.getElementById('usd').value,
+        ves: document.getElementById('ves').value,
+        categoria: document.getElementById('categoria').value,
+        observacion: document.getElementById('observacion').value,
+        archivoB64: imgB64,
+        mimeType: imgMime
+    };
+
+    try {
+        // Usamos mode: 'no-cors' para evitar bloqueos de Google
+        await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', // Crucial para Apps Script
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain' } // Evita pre-flight OPTIONS
         });
+
+        // Como no-cors no devuelve respuesta, asumimos éxito tras la espera
+        alert("¡Registro enviado! (Verifica tu historial en unos segundos)");
+        location.reload();
+    } catch(err) {
+        console.error(err);
+        alert("Error de conexión");
+        btn.disabled = false; 
+        btn.innerText = "Guardar Gasto";
+    }
+});
     </script>
 </body>
 </html>
