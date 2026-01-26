@@ -120,12 +120,18 @@
         async function validarAcceso() {
             const email = document.getElementById('userEmail').value;
             const clave = document.getElementById('userPass').value;
+            const btnLogin = document.getElementById('btnLogin');
+            btnLogin.disabled = true; 
+            btnLogin.innerText = "ENTRANDO...";
             const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
             const data = await res.json();
             if(data.status === 'success') {
                 localStorage.setItem('session', JSON.stringify(data));
                 mostrarApp(data.nombre);
-            } else { document.getElementById('errorMsg').classList.remove('hidden'); }
+            } else { 
+                btnLogin.disabled = false; 
+                btnLogin.innerText = "ENTRAR";
+                document.getElementById('errorMsg').classList.remove('hidden'); }
         }
 
         function mostrarApp(nombre) {
@@ -164,7 +170,7 @@
         // Como no podemos leer la respuesta directamente debido a redirecciones de Google
         // asumimos éxito si no hay error de red. 
         alert("¡Registro enviado con éxito!");
-        location.reload();
+        //location.reload();
 
     } catch(err) {
         console.error(err);
