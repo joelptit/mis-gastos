@@ -200,28 +200,59 @@
 
         function cerrarSesion() { localStorage.removeItem('session'); location.reload(); }
 
-        async function cargarHistorial() {
-            const container = document.getElementById('historyList');
-            container.innerHTML = '<p class="text-center text-gray-400 py-10 italic">Consultando base de datos...</p>';
-            try {
-                const res = await fetch(WEB_APP_URL);
-                const data = await res.json();
-                container.innerHTML = "";
-                // Listamos los últimos 20 de forma inversa
-                data.reverse().slice(0,20).forEach(g => {
-                    const card = `
-                        <div class="bg-slate-50 border-b p-3 flex justify-between items-center mb-1">
-                            <div>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase">${g[1]}</p> <p class="font-bold text-gray-700">${g[7] || 'Sin obs.'}</p> <span class="text-[9px] bg-slate-200 px-2 py-0.5 rounded text-gray-600 font-bold">${g[6]}</span> </div>
-                            <div class="text-right">
-                                <p class="text-blue-600 font-black">$${g[3]}</p>
-                                <p class="text-[10px] text-gray-400">Bs. ${g[4]}</p>
-                            </div>
-                        </div>`;
-                    container.innerHTML += card;
-                });
-            } catch(e) { container.innerHTML = "Error al cargar datos."; }
-        }
+ // Función auxiliar para formatear la fecha
+function formatearFechaAmPm(fechaStr) {
+    const fecha = new Date(fechaStr);
+    if (isNaN(fecha.getTime())) return fechaStr; // Retorna el original si no es fecha válida
+
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const anio = fecha.getFullYear();
+    
+    let horas = fecha.getHours();
+    const minutos = fecha.getMinutes().toString().padStart(2, '0');
+    const ampm = horas >= 12 ? 'p.m.' : 'a.m.';
+    
+    horas = horas % 12;
+    horas = horas ? horas : 12; // La hora '0' debería ser '12'
+    const horasStr = horas.toString().padStart(2, '0');
+
+    return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
+}
+
+async function cargarHistorial() {
+    const container = document.getElementById('historyList');
+    container.innerHTML = '<p class="text-center text-gray-400 py-10 italic">Consultando base de datos...</p>';
+    
+    try {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        container.innerHTML = "";
+
+        // Listamos los últimos 20 de forma inversa
+        data.reverse().slice(0, 20).forEach(g => {
+            // Formateamos la fecha (que está en la posición g[1])
+            const fechaFormateada = formatearFechaAmPm(g[1]);
+
+            const card = `
+                <div class="bg-slate-50 border-b p-3 flex justify-between items-center mb-1">
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">${fechaFormateada}</p> 
+                        <p class="font-bold text-gray-700">${g[7] || 'Sin obs.'}</p> 
+                        <span class="text-[9px] bg-slate-200 px-2 py-0.5 rounded text-gray-600 font-bold">${g[6]}</span> 
+                    </div>
+                    <div class="text-right">
+                        <p class="text-blue-600 font-black">$${parseFloat(g[3]).toFixed(2)}</p>
+                        <p class="text-[10px] text-gray-400">Bs. ${parseFloat(g[4]).toFixed(2)}</p>
+                    </div>
+                </div>`;
+            container.innerHTML += card;
+        });
+    } catch (e) { 
+        console.error(e);
+        container.innerHTML = "Error al cargar datos."; 
+    }
+}
 
         document.getElementById('formGasto').addEventListener('submit', async (e) => {
             e.preventDefault();
