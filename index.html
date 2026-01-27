@@ -9,20 +9,19 @@
         .active-tab { color: #2563eb; }
         body { padding-bottom: 70px; }
         
-        /* LOADER: Totalmente oculto e ignorado por el mouse de inicio */
+        /* LOADER */
         #loader { 
             display: none; 
             position: fixed;
             inset: 0;
             background: rgba(255,255,255,0.9);
-            z-index: 9999; /* Por encima de TODO */
+            z-index: 9999;
             pointer-events: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        /* Clase que activa el loader de verdad */
         #loader.active { 
             display: flex !important; 
             pointer-events: auto !important; 
@@ -36,6 +35,7 @@
         <p id="loaderText" class="font-bold text-blue-600 uppercase text-xs">Procesando...</p>
     </div>
 
+    <!-- LOGIN -->
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center mb-6 text-slate-800 tracking-tighter">SISTEMA GASTOS</h2>
@@ -46,6 +46,7 @@
         </div>
     </div>
 
+    <!-- APP -->
     <div id="mainContent" class="hidden max-w-lg mx-auto bg-white min-h-screen shadow-lg relative">
         <section id="section-home" class="app-section">
             <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow-md">
@@ -67,7 +68,10 @@
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase">Categoría</label>
                         <select id="categoria" class="w-full p-3 border rounded-xl bg-slate-50">
-                            <option>Alimentos</option><option>Servicios</option><option>Transporte</option><option>Varios</option>
+                            <option>Alimentos</option>
+                            <option>Servicios</option>
+                            <option>Transporte</option>
+                            <option>Varios</option>
                         </select>
                     </div>
                 </div>
@@ -97,12 +101,16 @@
                     <img id="preview" class="hidden mt-2 max-h-40 mx-auto rounded-lg shadow-md border-4 border-white">
                 </div>
 
-                <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm">Guardar Registro</button>
+                <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm">
+                    Guardar Registro
+                </button>
             </form>
         </section>
 
         <section id="section-history" class="app-section hidden pb-20">
-            <header class="bg-slate-800 text-white p-4 sticky top-0 z-10 font-bold text-center uppercase tracking-widest">Historial</header>
+            <header class="bg-slate-800 text-white p-4 sticky top-0 z-10 font-bold text-center uppercase tracking-widest">
+                Historial
+            </header>
             <div id="historyList" class="p-4 space-y-3"></div>
         </section>
 
@@ -119,106 +127,106 @@
         </nav>
     </div>
 
-    <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxm0D1SBg4lDcRnzjE1Jp7f4LD6hPCRHgyZFScLkzwYYMj5qxFMY-xIFWE0bWM7q-A1bw/exec"; 
-        let tasaActual = 0;
-        let imgB64 = null;
-        let imgMime = "";
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxm0D1SBg4lDcRnzjE1Jp7f4LD6hPCRHgyZFScLkzwYYMj5qxFMY-xIFWE0bWM7q-A1bw/exec"; 
+let tasaActual = 0;
+let imgB64 = null;
+let imgMime = "image/jpeg";
 
-        // Al cargar la página, nos aseguramos que el loader esté muerto
-        window.onload = () => {
-            const loader = document.getElementById('loader');
-            loader.classList.remove('active'); // Doble seguridad
+window.onload = () => {
+    const loader = document.getElementById('loader');
+    loader.classList.remove('active');
 
-            const sesion = localStorage.getItem('session');
-            if(sesion) mostrarApp(JSON.parse(sesion).nombre);
+    const sesion = localStorage.getItem('session');
+    if(sesion) mostrarApp(JSON.parse(sesion).nombre);
 
-            const ahora = new Date();
-            ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-            document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
+    const ahora = new Date();
+    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+    document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
 
-            obtenerTasa();
+    obtenerTasa();
+};
+
+async function obtenerTasa() {
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
+        const data = await res.json();
+        tasaActual = data.tasa;
+        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
+    } catch(e) { 
+        document.getElementById('tasaBadge').innerText = "Tasa: Offline";
+    }
+}
+
+function calcularUsd() {
+    const ves = document.getElementById('ves').value;
+    if(ves && tasaActual > 0) {
+        document.getElementById('usd').value = (ves / tasaActual).toFixed(2);
+    } else {
+        document.getElementById('usd').value = "";
+    }
+}
+
+function procesarImagen(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 800;
+                let w = img.width, h = img.height;
+                if (w > h && w > MAX) { h *= MAX/w; w = MAX; }
+                else if (h > MAX) { w *= MAX/h; h = MAX; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                imgB64 = canvas.toDataURL('image/jpeg', 0.7);
+                imgMime = "image/jpeg";
+                document.getElementById('preview').src = imgB64;
+                document.getElementById('preview').classList.remove('hidden');
+                document.getElementById('fileName').innerText = "Imagen cargada";
+            };
+            img.src = e.target.result;
         };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
 
-        async function obtenerTasa() {
-            try {
-                const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
-                const data = await res.json();
-                tasaActual = data.tasa;
-                document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
-            } catch(e) { 
-                document.getElementById('tasaBadge').innerText = "Tasa: Offline";
-            }
+async function validarAcceso() {
+    const email = userEmail.value;
+    const clave = userPass.value;
+    const loader = document.getElementById('loader');
+
+    if(!email || !clave) return alert("Ingresa datos");
+
+    loader.classList.add('active');
+
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
+        const data = await res.json();
+        
+        if(data.status === 'success') {
+            localStorage.setItem('session', JSON.stringify(data));
+            mostrarApp(data.nombre);
+            loader.classList.remove('active');
+        } else {
+            loader.classList.remove('active');
+            errorMsg.classList.remove('hidden');
         }
+    } catch(e) { 
+        loader.classList.remove('active');
+        alert("Error de conexión"); 
+    }
+}
 
-        function calcularUsd() {
-            const ves = document.getElementById('ves').value;
-            if(ves && tasaActual > 0) {
-                document.getElementById('usd').value = (ves / tasaActual).toFixed(2);
-            } else {
-                document.getElementById('usd').value = "";
-            }
-        }
+function mostrarApp(nombre) {
+    loginScreen.classList.add('hidden');
+    mainContent.classList.remove('hidden');
+    usuarioDisplay.value = nombre;
+}
 
-        function procesarImagen(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX = 800;
-                        let w = img.width, h = img.height;
-                        if (w > h && w > MAX) { h *= MAX/w; w = MAX; }
-                        else if (h > MAX) { w *= MAX/h; h = MAX; }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        imgB64 = canvas.toDataURL('image/jpeg', 0.7);
-                        imgMime = "image/jpeg";
-                        document.getElementById('preview').src = imgB64;
-                        document.getElementById('preview').classList.remove('hidden');
-                        document.getElementById('fileName').innerText = "Imagen cargada";
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        async function validarAcceso() {
-            const email = document.getElementById('userEmail').value;
-            const clave = document.getElementById('userPass').value;
-            const loader = document.getElementById('loader');
-
-            if(!email || !clave) return alert("Ingresa datos");
-
-            loader.classList.add('active'); // Mostrar loader solo aquí
-
-            try {
-                const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
-                const data = await res.json();
-                
-                if(data.status === 'success') {
-                    localStorage.setItem('session', JSON.stringify(data));
-                    mostrarApp(data.nombre);
-                    loader.classList.remove('active'); // Quitar loader al entrar
-                } else {
-                    loader.classList.remove('active');
-                    document.getElementById('errorMsg').classList.remove('hidden');
-                }
-            } catch(e) { 
-                loader.classList.remove('active');
-                alert("Error de conexión"); 
-            }
-        }
-
-        function mostrarApp(nombre) {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('usuarioDisplay').value = nombre;
-        }
-
-        document.getElementById('formGasto').onsubmit = async (e) => {
+/* ✅ CORRECCIÓN CORS AQUÍ */
+document.getElementById('formGasto').onsubmit = async (e) => {
     e.preventDefault();
 
     const loader = document.getElementById('loader');
@@ -236,23 +244,21 @@
     };
 
     try {
-        // 1️⃣ Guardar gasto
         const res = await fetch(WEB_APP_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         });
 
         const data = await res.json();
         if (data.status !== "success") throw "Error guardando gasto";
 
-        // 2️⃣ Subir imagen (si existe)
         if (imgB64) {
             lText.innerText = "Subiendo comprobante...";
 
             const imgRes = await fetch(WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: "updateImage",
                     id: data.id,
@@ -262,9 +268,7 @@
             });
 
             const imgData = await imgRes.json();
-            if (imgData.status !== "success") {
-                throw "Error subiendo imagen";
-            }
+            if (imgData.status !== "success") throw "Error subiendo imagen";
         }
 
         alert("✅ Registro guardado correctamente");
@@ -276,36 +280,41 @@
     }
 };
 
-        function switchTab(t) {
-            document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('section-' + t).classList.remove('hidden');
-            document.querySelectorAll('nav button').forEach(b => b.classList.replace('active-tab', 'text-gray-400'));
-            document.getElementById('nav-' + t).classList.replace('text-gray-400', 'active-tab');
-            if(t === 'history') cargarHistorial();
-        }
+function switchTab(t) {
+    document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('section-' + t).classList.remove('hidden');
+    document.querySelectorAll('nav button').forEach(b => b.classList.replace('active-tab', 'text-gray-400'));
+    document.getElementById('nav-' + t).classList.replace('text-gray-400', 'active-tab');
+    if(t === 'history') cargarHistorial();
+}
 
-        async function cargarHistorial() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = `<p class="text-center font-bold text-slate-400 animate-pulse">Consultando...</p>`;
-            try {
-                const res = await fetch(WEB_APP_URL);
-                const data = await res.json();
-                list.innerHTML = data.reverse().map(g => `
-                    <div class="bg-slate-50 p-4 rounded-2xl border flex justify-between items-center shadow-sm">
-                        <div class="text-xs">
-                            <p class="font-black text-slate-800 uppercase tracking-tighter text-sm">${g[7] || 'Sin obs'}</p>
-                            <p class="text-slate-400 font-bold">${new Date(g[1]).toLocaleDateString()}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-blue-600 font-black text-lg tracking-tighter">$${parseFloat(g[3]).toFixed(2)}</p>
-                            <span class="text-[8px] bg-slate-200 px-2 py-0.5 rounded-full font-black text-slate-500 uppercase">${g[6]}</span>
-                        </div>
-                    </div>
-                `).join('');
-            } catch(e) { list.innerHTML = "Error de carga."; }
-        }
+async function cargarHistorial() {
+    const list = document.getElementById('historyList');
+    list.innerHTML = `<p class="text-center font-bold text-slate-400 animate-pulse">Consultando...</p>`;
+    try {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        list.innerHTML = data.reverse().map(g => `
+            <div class="bg-slate-50 p-4 rounded-2xl border flex justify-between items-center shadow-sm">
+                <div class="text-xs">
+                    <p class="font-black text-slate-800 uppercase tracking-tighter text-sm">${g[7] || 'Sin obs'}</p>
+                    <p class="text-slate-400 font-bold">${new Date(g[1]).toLocaleDateString()}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-blue-600 font-black text-lg tracking-tighter">$${parseFloat(g[3]).toFixed(2)}</p>
+                    <span class="text-[8px] bg-slate-200 px-2 py-0.5 rounded-full font-black text-slate-500 uppercase">${g[6]}</span>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) { 
+        list.innerHTML = "Error de carga."; 
+    }
+}
 
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
-    </script>
+function cerrarSesion() { 
+    localStorage.clear(); 
+    location.reload(); 
+}
+</script>
 </body>
 </html>
