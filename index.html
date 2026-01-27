@@ -3,17 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Pro - Secuencial</title>
+    <title>Gastos Pro 1.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .active-tab { color: #2563eb; }
         body { padding-bottom: 70px; }
-        .loading-overlay { background: rgba(255,255,255,0.8); display: none; }
+        /* Corrección de bloqueo: pointer-events none evita que el div capture clics cuando no debe */
+        .loading-overlay { 
+            background: rgba(255,255,255,0.8); 
+            display: none; 
+            pointer-events: none; 
+            z-index: 100;
+        }
+        /* Solo activa clics cuando el loader es visible */
+        .loading-overlay.active { 
+            display: flex; 
+            pointer-events: auto; 
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-    <div id="loader" class="loading-overlay fixed inset-0 z-[100] flex flex-col items-center justify-center">
+    <div id="loader" class="loading-overlay fixed inset-0 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
         <p id="loaderText" class="font-bold text-blue-600 uppercase text-xs">Procesando...</p>
     </div>
@@ -23,7 +34,7 @@
             <h2 class="text-2xl font-black text-center mb-6 text-slate-800">ACCESO</h2>
             <input type="email" id="userEmail" class="w-full border p-4 rounded-xl mb-4" placeholder="Email">
             <input type="password" id="userPass" class="w-full border p-4 rounded-xl mb-4" placeholder="Clave">
-            <button onclick="validarAcceso()" id="btnLogin" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl">ENTRAR</button>
+            <button onclick="validarAcceso()" id="btnLogin" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg">ENTRAR</button>
             <p id="errorMsg" class="text-red-500 mt-4 hidden text-center font-bold italic">Datos incorrectos</p>
         </div>
     </div>
@@ -31,21 +42,21 @@
     <div id="mainContent" class="hidden max-w-lg mx-auto bg-white min-h-screen shadow-lg relative">
         
         <section id="section-home" class="app-section">
-            <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between">
+            <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center">
                 <span class="font-bold uppercase">Nuevo Registro</span>
-                <span id="tasaBadge" class="text-[10px] bg-blue-800 px-2 py-1 rounded">Cargando tasa...</span>
+                <span id="tasaBadge" class="text-[10px] bg-blue-800 px-2 py-1 rounded font-mono italic">Cargando tasa...</span>
             </header>
             
             <form id="formGasto" class="p-4 space-y-4">
                 <div>
                     <label class="text-xs font-bold text-gray-500 uppercase">Fecha</label>
-                    <input type="datetime-local" id="fecha" required class="w-full p-3 border rounded-xl">
+                    <input type="datetime-local" id="fecha" required class="w-full p-3 border rounded-xl bg-white">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-bold text-gray-500 uppercase">Usuario</label>
-                        <input type="text" id="usuarioDisplay" readonly class="w-full p-3 border rounded-xl bg-gray-50">
+                        <input type="text" id="usuarioDisplay" readonly class="w-full p-3 border rounded-xl bg-gray-100 text-gray-500">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-gray-500 uppercase">Categoría</label>
@@ -62,7 +73,7 @@
                     </div>
                     <div>
                         <label class="text-xs font-bold text-blue-600 uppercase">Monto USD</label>
-                        <input type="number" id="usd" step="0.01" readonly class="w-full p-3 border rounded-xl bg-gray-50 font-bold">
+                        <input type="number" id="usd" step="0.01" readonly class="w-full p-3 border rounded-xl bg-gray-100 font-bold text-blue-700">
                     </div>
                 </div>
 
@@ -77,27 +88,27 @@
                         <input type="file" id="archivo" accept="image/*" class="hidden" onchange="procesarImagen(this)">
                         <p id="fileName" class="text-[10px] text-gray-400 mt-1 italic">Opcional</p>
                     </label>
-                    <img id="preview" class="hidden mt-2 max-h-40 mx-auto rounded-lg shadow-md">
+                    <img id="preview" class="hidden mt-2 max-h-40 mx-auto rounded-lg shadow-md border">
                 </div>
 
-                <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase">Guardar Gasto</button>
+                <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-wider">Guardar Gasto</button>
             </form>
         </section>
 
         <section id="section-history" class="app-section hidden">
-            <header class="bg-slate-800 text-white p-4 sticky top-0 z-10">HISTORIAL</header>
+            <header class="bg-slate-800 text-white p-4 sticky top-0 z-10 font-bold text-center">HISTORIAL RECIENTE</header>
             <div id="historyList" class="p-4 space-y-2"></div>
         </section>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-50 max-w-lg mx-auto">
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-50 max-w-lg mx-auto shadow-inner">
             <button onclick="switchTab('home')" id="nav-home" class="active-tab flex flex-col items-center">
-                <span class="text-[10px] font-bold">HOME</span>
+                <span class="text-[10px] font-bold tracking-tighter">HOME</span>
             </button>
             <button onclick="switchTab('history')" id="nav-history" class="text-gray-400 flex flex-col items-center">
-                <span class="text-[10px] font-bold">HISTORIAL</span>
+                <span class="text-[10px] font-bold tracking-tighter">HISTORIAL</span>
             </button>
             <button onclick="cerrarSesion()" class="text-red-500 flex flex-col items-center">
-                <span class="text-[10px] font-bold">SALIR</span>
+                <span class="text-[10px] font-bold tracking-tighter">SALIR</span>
             </button>
         </nav>
     </div>
@@ -108,32 +119,44 @@
         let imgB64 = null;
         let imgMime = "";
 
-        // Inicializar App
-        window.onload = async () => {
+        window.onload = () => {
+            // 1. Manejo inmediato de sesión
             const sesion = localStorage.getItem('session');
-            if(sesion) mostrarApp(JSON.parse(sesion).nombre);
-            
-            // Fecha por defecto
+            if(sesion) {
+                mostrarApp(JSON.parse(sesion).nombre);
+            }
+
+            // 2. Fecha por defecto
             const ahora = new Date();
             ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
             document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
 
-            // Obtener Tasa
+            // 3. Obtener Tasa en segundo plano (No bloqueante)
+            obtenerTasa();
+        };
+
+        async function obtenerTasa() {
             try {
                 const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
                 const data = await res.json();
                 tasaActual = data.tasa;
                 document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
-            } catch(e) { console.error("Error tasa"); }
-        };
+            } catch(e) { 
+                document.getElementById('tasaBadge').innerText = "Tasa: Offline";
+            }
+        }
 
         function calcularUsd() {
             const ves = document.getElementById('ves').value;
-            document.getElementById('usd').value = (ves && tasaActual > 0) ? (ves / tasaActual).toFixed(2) : "";
+            if(ves && tasaActual > 0) {
+                document.getElementById('usd').value = (ves / tasaActual).toFixed(2);
+            } else {
+                document.getElementById('usd').value = "";
+            }
         }
 
         function procesarImagen(input) {
-            if (input.files[0]) {
+            if (input.files && input.files[0]) {
                 document.getElementById('fileName').innerText = input.files[0].name;
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -157,16 +180,54 @@
             }
         }
 
-        // --- FLUJO DE GUARDADO EN DOS PASOS ---
-        document.getElementById('formGasto').addEventListener('submit', async (e) => {
+        async function validarAcceso() {
+            const email = document.getElementById('userEmail').value;
+            const clave = document.getElementById('userPass').value;
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('btnLogin');
+
+            if(!email || !clave) {
+                alert("Por favor completa los campos.");
+                return;
+            }
+
+            // Activar Loader
+            loader.classList.add('active');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
+                const data = await res.json();
+                
+                if(data.status === 'success') {
+                    localStorage.setItem('session', JSON.stringify(data));
+                    mostrarApp(data.nombre);
+                } else {
+                    document.getElementById('errorMsg').classList.remove('hidden');
+                }
+            } catch(e) { 
+                alert("Error de conexión. Revisa el WEB_APP_URL."); 
+            } finally {
+                loader.classList.remove('active');
+                btn.disabled = false;
+            }
+        }
+
+        function mostrarApp(nombre) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('usuarioDisplay').value = nombre;
+        }
+
+        document.getElementById('formGasto').onsubmit = async (e) => {
             e.preventDefault();
             const loader = document.getElementById('loader');
             const lText = document.getElementById('loaderText');
             
-            loader.style.display = 'flex';
+            loader.classList.add('active');
             lText.innerText = "Paso 1: Guardando Gasto...";
 
-            const payloadGasto = {
+            const payload = {
                 fecha: document.getElementById('fecha').value,
                 usuario: document.getElementById('usuarioDisplay').value,
                 usd: document.getElementById('usd').value,
@@ -176,16 +237,18 @@
             };
 
             try {
-                // PASO 1: Guardar en Sheet
-                const res1 = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payloadGasto) });
+                const res1 = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload) 
+                });
                 const data1 = await res1.json();
 
                 if (data1.status === "success" && imgB64) {
-                    // PASO 2: Subir Imagen usando el ID recibido
-                    lText.innerText = "Paso 2: Subiendo Comprobante...";
+                    lText.innerText = "Paso 2: Subiendo Foto...";
                     await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        mode: 'no-cors', // Evita problemas de CORS con archivos pesados
+                        mode: 'no-cors',
                         body: JSON.stringify({
                             action: "updateImage",
                             id: data1.id,
@@ -194,37 +257,42 @@
                         })
                     });
                 }
-                
-                alert("Registro completado con éxito");
+                alert("¡Registro guardado con éxito!");
                 location.reload();
             } catch (err) {
                 alert("Error: " + err.toString());
-                loader.style.display = 'none';
+            } finally {
+                loader.classList.remove('active');
             }
-        });
+        };
 
-        // Funciones de navegación y sesión (Iguales a las tuyas)
         function switchTab(t) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
             document.getElementById('section-' + t).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('active-tab', 'text-gray-400'));
+            document.getElementById('nav-' + t).classList.replace('text-gray-400', 'active-tab');
             if(t === 'history') cargarHistorial();
         }
 
-        async function validarAcceso() {
-            const email = document.getElementById('userEmail').value;
-            const clave = document.getElementById('userPass').value;
-            const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
-            const data = await res.json();
-            if(data.status === 'success') {
-                localStorage.setItem('session', JSON.stringify(data));
-                mostrarApp(data.nombre);
-            } else { alert("Error de acceso"); }
-        }
-
-        function mostrarApp(n) {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            document.getElementById('usuarioDisplay').value = n;
+        async function cargarHistorial() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = "Cargando historial...";
+            try {
+                const res = await fetch(WEB_APP_URL);
+                const data = await res.json();
+                list.innerHTML = data.reverse().map(g => `
+                    <div class="bg-slate-50 p-3 rounded-xl border flex justify-between items-center shadow-sm">
+                        <div class="text-xs">
+                            <p class="font-bold text-slate-800">${g[7] || 'Sin obs'}</p>
+                            <p class="text-slate-400 font-mono">${new Date(g[1]).toLocaleDateString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-blue-600 font-black text-sm">$${parseFloat(g[3]).toFixed(2)}</p>
+                            <span class="text-[9px] text-gray-400 uppercase font-bold">${g[6]}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) { list.innerHTML = "Error al cargar."; }
         }
 
         function cerrarSesion() { localStorage.clear(); location.reload(); }
