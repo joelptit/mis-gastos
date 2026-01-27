@@ -120,7 +120,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwlaBuAvMA9WKZ8YRfF9NtOmfXofAyEduAiKvzPE988h7wKeHe101YOddAEVzXyDd-DQg/exec"; 
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxm0D1SBg4lDcRnzjE1Jp7f4LD6hPCRHgyZFScLkzwYYMj5qxFMY-xIFWE0bWM7q-A1bw/exec"; 
         let tasaActual = 0;
         let imgB64 = null;
         let imgMime = "";
@@ -219,50 +219,62 @@
         }
 
         document.getElementById('formGasto').onsubmit = async (e) => {
-            e.preventDefault();
-            const loader = document.getElementById('loader');
-            const lText = document.getElementById('loaderText');
-            
-            loader.classList.add('active');
-            lText.innerText = "Guardando Registro...";
+    e.preventDefault();
 
-            const payload = {
-                fecha: document.getElementById('fecha').value,
-                usuario: document.getElementById('usuarioDisplay').value,
-                usd: document.getElementById('usd').value,
-                ves: document.getElementById('ves').value,
-                categoria: document.getElementById('categoria').value,
-                observacion: document.getElementById('observacion').value
-            };
+    const loader = document.getElementById('loader');
+    const lText = document.getElementById('loaderText');
+    loader.classList.add('active');
+    lText.innerText = "Guardando registro...";
 
-            try {
-                const res1 = await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload) 
-                });
-                const data1 = await res1.json();
+    const payload = {
+        fecha: fecha.value,
+        usuario: usuarioDisplay.value,
+        usd: usd.value,
+        ves: ves.value,
+        categoria: categoria.value,
+        observacion: observacion.value
+    };
 
-                if (data1.status === "success" && imgB64) {
-                    lText.innerText = "Subiendo Comprobante...";
-                    await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        body: JSON.stringify({
-                            action: "updateImage",
-                            id: data1.id,
-                            archivoB64: imgB64,
-                            mimeType: imgMime
-                        })
-                    });
-                }
-                alert("¡Guardado correctamente!");
-                location.reload();
-            } catch (err) {
-                alert("Error al guardar: " + err.toString());
-                loader.classList.remove('active');
+    try {
+        // 1️⃣ Guardar gasto
+        const res = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.status !== "success") throw "Error guardando gasto";
+
+        // 2️⃣ Subir imagen (si existe)
+        if (imgB64) {
+            lText.innerText = "Subiendo comprobante...";
+
+            const imgRes = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: "updateImage",
+                    id: data.id,
+                    archivoB64: imgB64,
+                    mimeType: imgMime
+                })
+            });
+
+            const imgData = await imgRes.json();
+            if (imgData.status !== "success") {
+                throw "Error subiendo imagen";
             }
-        };
+        }
+
+        alert("✅ Registro guardado correctamente");
+        location.reload();
+
+    } catch (err) {
+        alert("❌ " + err);
+        loader.classList.remove('active');
+    }
+};
 
         function switchTab(t) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
