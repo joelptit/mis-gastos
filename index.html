@@ -8,24 +8,17 @@
     <style>
         .active-tab { color: #2563eb; }
         body { padding-bottom: 70px; }
-        
-        /* LOADER */
         #loader { 
             display: none; 
             position: fixed;
             inset: 0;
             background: rgba(255,255,255,0.9);
             z-index: 9999;
-            pointer-events: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
-
-        #loader.active { 
-            display: flex !important; 
-            pointer-events: auto !important; 
-        }
+        #loader.active { display: flex !important; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -35,7 +28,6 @@
         <p id="loaderText" class="font-bold text-blue-600 uppercase text-xs">Procesando...</p>
     </div>
 
-    <!-- LOGIN -->
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center mb-6 text-slate-800 tracking-tighter">SISTEMA GASTOS</h2>
@@ -46,7 +38,6 @@
         </div>
     </div>
 
-    <!-- APP -->
     <div id="mainContent" class="hidden max-w-lg mx-auto bg-white min-h-screen shadow-lg relative">
         <section id="section-home" class="app-section">
             <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow-md">
@@ -128,22 +119,17 @@
     </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxonHy1XzGXa7Hc8bz9yZNNaq3t3qMI9yAl2bGH0azGXGHJ98cqFeD9bFUiBsXxlxy7sQ/exec"; 
-let tasaActual = 0;
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvtgiKfJzyWQ3VeDXmdwOMx2efeZ5trCoFtT7LzKA0lTAb8B_BrQVKt-wyy03ta1Sq-A/exec"; 
+let tasaActual = 40;
 let imgB64 = null;
-let imgMime = "image/jpeg";
 
 window.onload = () => {
-    const loader = document.getElementById('loader');
-    loader.classList.remove('active');
-
     const sesion = localStorage.getItem('session');
     if(sesion) mostrarApp(JSON.parse(sesion).nombre);
 
     const ahora = new Date();
     ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
     document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
-
     obtenerTasa();
 };
 
@@ -153,18 +139,12 @@ async function obtenerTasa() {
         const data = await res.json();
         tasaActual = data.tasa;
         document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
-    } catch(e) { 
-        document.getElementById('tasaBadge').innerText = "Tasa: Offline";
-    }
+    } catch(e) { document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS"; }
 }
 
 function calcularUsd() {
     const ves = document.getElementById('ves').value;
-    if(ves && tasaActual > 0) {
-        document.getElementById('usd').value = (ves / tasaActual).toFixed(2);
-    } else {
-        document.getElementById('usd').value = "";
-    }
+    document.getElementById('usd').value = (ves && tasaActual > 0) ? (ves / tasaActual).toFixed(2) : "";
 }
 
 function procesarImagen(input) {
@@ -181,10 +161,9 @@ function procesarImagen(input) {
                 canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                 imgB64 = canvas.toDataURL('image/jpeg', 0.7);
-                imgMime = "image/jpeg";
                 document.getElementById('preview').src = imgB64;
                 document.getElementById('preview').classList.remove('hidden');
-                document.getElementById('fileName').innerText = "Imagen cargada";
+                document.getElementById('fileName').innerText = "Imagen lista";
             };
             img.src = e.target.result;
         };
@@ -193,89 +172,68 @@ function procesarImagen(input) {
 }
 
 async function validarAcceso() {
-    const email = userEmail.value;
-    const clave = userPass.value;
-    const loader = document.getElementById('loader');
-
+    const email = document.getElementById('userEmail').value;
+    const clave = document.getElementById('userPass').value;
     if(!email || !clave) return alert("Ingresa datos");
-
-    loader.classList.add('active');
-
+    
+    document.getElementById('loader').classList.add('active');
     try {
         const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
         const data = await res.json();
-        
         if(data.status === 'success') {
             localStorage.setItem('session', JSON.stringify(data));
             mostrarApp(data.nombre);
-            loader.classList.remove('active');
         } else {
-            loader.classList.remove('active');
-            errorMsg.classList.remove('hidden');
+            document.getElementById('errorMsg').classList.remove('hidden');
         }
-    } catch(e) { 
-        loader.classList.remove('active');
-        alert("Error de conexión"); 
-    }
+    } catch(e) { alert("Error de conexión"); }
+    document.getElementById('loader').classList.remove('active');
 }
 
 function mostrarApp(nombre) {
-    loginScreen.classList.add('hidden');
-    mainContent.classList.remove('hidden');
-    usuarioDisplay.value = nombre;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('usuarioDisplay').value = nombre;
 }
 
-/* ✅ CORRECCIÓN CORS AQUÍ */
 document.getElementById('formGasto').onsubmit = async (e) => {
     e.preventDefault();
-
     const loader = document.getElementById('loader');
     const lText = document.getElementById('loaderText');
     loader.classList.add('active');
-    lText.innerText = "Guardando registro...";
-
+    
     const payload = {
-        fecha: fecha.value,
-        usuario: usuarioDisplay.value,
-        usd: usd.value,
-        ves: ves.value,
-        categoria: categoria.value,
-        observacion: observacion.value
+        fecha: document.getElementById('fecha').value,
+        usuario: document.getElementById('usuarioDisplay').value,
+        usd: document.getElementById('usd').value,
+        ves: document.getElementById('ves').value,
+        categoria: document.getElementById('categoria').value,
+        observacion: document.getElementById('observacion').value
     };
 
     try {
+        lText.innerText = "Guardando datos...";
         const res = await fetch(WEB_APP_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         });
-
         const data = await res.json();
-        if (data.status !== "success") throw "Error guardando gasto";
 
-        if (imgB64) {
-            lText.innerText = "Subiendo comprobante...";
-
-            const imgRes = await fetch(WEB_APP_URL, {
+        if (data.status === "success" && imgB64) {
+            lText.innerText = "Subiendo imagen...";
+            await fetch(WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: "updateImage",
                     id: data.id,
-                    archivoB64: imgB64,
-                    mimeType: imgMime
+                    archivoB64: imgB64
                 })
             });
-
-            const imgData = await imgRes.json();
-            if (imgData.status !== "success") throw "Error subiendo imagen";
         }
-
-        alert("✅ Registro guardado correctamente");
+        alert("✅ Registro guardado");
         location.reload();
-
     } catch (err) {
-        alert("❌ " + err);
+        alert("❌ Error: " + err);
         loader.classList.remove('active');
     }
 };
@@ -290,31 +248,31 @@ function switchTab(t) {
 
 async function cargarHistorial() {
     const list = document.getElementById('historyList');
-    list.innerHTML = `<p class="text-center font-bold text-slate-400 animate-pulse">Consultando...</p>`;
+    list.innerHTML = `<p class="text-center font-bold text-slate-400">Cargando...</p>`;
     try {
         const res = await fetch(WEB_APP_URL);
         const data = await res.json();
-        list.innerHTML = data.reverse().map(g => `
-            <div class="bg-slate-50 p-4 rounded-2xl border flex justify-between items-center shadow-sm">
-                <div class="text-xs">
-                    <p class="font-black text-slate-800 uppercase tracking-tighter text-sm">${g[7] || 'Sin obs'}</p>
-                    <p class="text-slate-400 font-bold">${new Date(g[1]).toLocaleDateString()}</p>
+        list.innerHTML = data.reverse().map(g => {
+            const hasImg = g[5] && g[5].includes("http");
+            return `
+            <div class="bg-slate-50 p-4 rounded-2xl border shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="text-xs">
+                        <p class="font-black text-slate-800 uppercase text-sm">${g[7] || 'Sin observación'}</p>
+                        <p class="text-slate-400 font-bold">${new Date(g[1]).toLocaleDateString()}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-blue-600 font-black text-lg tracking-tighter">$${parseFloat(g[3]).toFixed(2)}</p>
+                        <span class="text-[9px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase">${g[6]}</span>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-blue-600 font-black text-lg tracking-tighter">$${parseFloat(g[3]).toFixed(2)}</p>
-                    <span class="text-[8px] bg-slate-200 px-2 py-0.5 rounded-full font-black text-slate-500 uppercase">${g[6]}</span>
-                </div>
-            </div>
-        `).join('');
-    } catch(e) { 
-        list.innerHTML = "Error de carga."; 
-    }
+                ${hasImg ? `<a href="${g[5]}" target="_blank" class="block text-center bg-white border py-2 rounded-xl text-[10px] font-bold text-blue-500 hover:bg-blue-50">🖼️ VER COMPROBANTE</a>` : ''}
+            </div>`;
+        }).join('');
+    } catch(e) { list.innerHTML = "Error al cargar historial."; }
 }
 
-function cerrarSesion() { 
-    localStorage.clear(); 
-    location.reload(); 
-}
+function cerrarSesion() { localStorage.clear(); location.reload(); }
 </script>
 </body>
 </html>
