@@ -48,7 +48,23 @@
             --ring: 240 5.9% 10%;
             --radius: 0.5rem;
         }
-        body { font-family: 'Inter', system-ui, sans-serif; padding-bottom: 80px; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+        .dark {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 6%;
+            --card-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 240 5.9% 10%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --destructive: 0 62.8% 50.6%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 240 4.9% 83.9%;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; padding-bottom: 80px; background: hsl(var(--background)); color: hsl(var(--foreground)); transition: background-color 0.2s, color 0.2s; }
         .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
         .btn-primary:hover { opacity: 0.9; }
         .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); border: 1px solid hsl(var(--border)); }
@@ -62,6 +78,11 @@
         .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); }
         .toast { transform: translateY(-100%); opacity: 0; transition: transform 0.25s, opacity 0.25s; }
         .toast.show { transform: translateY(0); opacity: 1; }
+        .theme-toggle { appearance: none; background: transparent; border: none; cursor: pointer; padding: 0.5rem; border-radius: var(--radius); color: hsl(var(--muted-foreground)); }
+        .theme-toggle:hover { color: hsl(var(--foreground)); background: hsl(var(--muted)); }
+        .history-group-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem; }
+        #loginScreen { background: rgba(0,0,0,0.85); }
+        .dark #loginScreen { background: hsl(240 10% 3.9% / 0.98); }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -77,7 +98,11 @@
     </div>
 
     <!-- Login -->
-    <div id="loginScreen" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div id="loginScreen" class="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <button type="button" id="themeToggleLogin" class="theme-toggle fixed top-4 right-4 z-50" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+            <svg id="iconSun" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            <svg id="iconMoon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
         <div class="card w-full max-w-sm p-6 sm:p-8 shadow-xl">
             <div class="text-center mb-6">
                 <h1 class="text-xl font-semibold tracking-tight text-card-foreground">Gastos Pro</h1>
@@ -105,7 +130,13 @@
         <section id="section-home" class="app-section">
             <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex justify-between items-center">
                 <h2 class="text-base font-semibold text-card-foreground">Nuevo gasto</h2>
-                <span id="tasaBadge" class="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md font-medium">Cargando tasa...</span>
+                <div class="flex items-center gap-2">
+                    <span id="tasaBadge" class="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md font-medium">Cargando tasa...</span>
+                    <button type="button" id="themeToggleHome" class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+                        <svg id="iconSunHome" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <svg id="iconMoonHome" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                    </button>
+                </div>
             </header>
 
             <form id="formGasto" class="p-4 space-y-5">
@@ -165,10 +196,27 @@
         </section>
 
         <section id="section-history" class="app-section hidden pb-24">
-            <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
-                <h2 class="text-base font-semibold text-card-foreground">Historial de gastos</h2>
+            <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex justify-between items-center">
+                <h2 class="text-base font-semibold text-card-foreground">Historial</h2>
+                <button type="button" id="themeToggleHistory" class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+                    <svg id="iconSunHistory" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="iconMoonHistory" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                </button>
             </header>
-            <div id="historyList" class="p-4 space-y-3"></div>
+            <div class="p-4 space-y-4">
+                <div id="historySummary" class="card p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 hidden"></div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <span class="text-sm font-medium text-card-foreground">Categoría:</span>
+                    <select id="historyFilterCategory" class="input-base h-9 px-3 text-sm w-full max-w-[180px]" onchange="cargarHistorialConFiltro()">
+                        <option value="">Todas</option>
+                        <option value="Alimentos">Alimentos</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Varios">Varios</option>
+                    </select>
+                </div>
+                <div id="historyList" class="space-y-4"></div>
+            </div>
         </section>
 
         <nav class="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around py-3 z-50 max-w-lg mx-auto">
@@ -191,6 +239,34 @@
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0uszzl0MawDgb0RuzD1bfyxiB137Agedy_2iWBzsgC1ZH0EFfbTrXUlPU3vRSAn6o8Q/exec";
 let tasaActual = 40;
 let imgB64 = null;
+let historyData = [];
+
+function getTheme() {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') return stored;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    return 'light';
+}
+
+function setTheme(mode) {
+    localStorage.setItem('theme', mode);
+    document.documentElement.classList.toggle('dark', mode === 'dark');
+    updateThemeIcons();
+}
+
+function toggleTheme() {
+    setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+}
+
+function updateThemeIcons() {
+    const isDark = document.documentElement.classList.contains('dark');
+    ['Login', 'Home', 'History'].forEach(suffix => {
+        const sun = document.getElementById('iconSun' + (suffix === 'Login' ? '' : suffix));
+        const moon = document.getElementById('iconMoon' + (suffix === 'Login' ? '' : suffix));
+        if (sun) { sun.classList.toggle('hidden', !isDark); }
+        if (moon) { moon.classList.toggle('hidden', isDark); }
+    });
+}
 
 function showToast(message, type) {
     const toast = document.getElementById('toast');
@@ -203,6 +279,7 @@ function showToast(message, type) {
 }
 
 window.onload = () => {
+    setTheme(getTheme());
     const sesion = localStorage.getItem('session');
     if (sesion) mostrarApp(JSON.parse(sesion).nombre);
     const ahora = new Date();
@@ -328,31 +405,71 @@ function switchTab(t) {
     if (t === 'history') cargarHistorial();
 }
 
-async function cargarHistorial() {
+function formatRelativeDate(d) {
+    const date = new Date(d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const timeStr = date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    if (dateOnly.getTime() === today.getTime()) return 'Hoy · ' + timeStr;
+    if (dateOnly.getTime() === yesterday.getTime()) return 'Ayer · ' + timeStr;
+    return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined }) + ' · ' + timeStr;
+}
+
+function renderHistoryList() {
     const list = document.getElementById('historyList');
-    list.innerHTML = '<p class="text-center text-sm text-muted-foreground py-8">Cargando...</p>';
-    try {
-        const res = await fetch(WEB_APP_URL);
-        const data = await res.json();
-        if (!data || !data.length) {
-            list.innerHTML = '<p class="text-center text-sm text-muted-foreground py-8">No hay registros aún.</p>';
-            return;
-        }
-        list.innerHTML = data.reverse().map(g => {
+    const filtered = getFilteredHistoryData();
+    if (!filtered.length) {
+        list.innerHTML = `
+            <div class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted text-muted-foreground mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                </div>
+                <p class="text-sm font-medium text-card-foreground">${filterCat ? 'No hay gastos en esta categoría' : 'No hay registros aún'}</p>
+                <p class="text-xs text-muted-foreground mt-1">${filterCat ? 'Prueba otra categoría' : 'Añade el primero desde Nuevo'}</p>
+            </div>`;
+        return;
+    }
+    const byDate = {};
+    filtered.forEach(g => {
+        const d = new Date(g[1]);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (!byDate[key]) byDate[key] = [];
+        byDate[key].push(g);
+    });
+    const sortedKeys = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+    function groupLabel(key) {
+        if (key === todayKey) return 'Hoy';
+        if (key === yesterdayKey) return 'Ayer';
+        const [y, m, d] = key.split('-');
+        const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        return d + ' ' + months[parseInt(m, 10) - 1] + (y !== new Date().getFullYear().toString() ? ' ' + y : '');
+    }
+    list.innerHTML = sortedKeys.map(key => {
+        const items = byDate[key];
+        const rows = items.map(g => {
             const linkImg = g[5] && g[5].startsWith('http') ? g[5] : null;
+            const usd = parseFloat(g[3] || 0);
+            const ves = parseFloat(g[4] || 0);
             return `
-                <div class="card p-4 flex items-center gap-4">
+                <div class="card p-4 flex items-center gap-4 hover:border-border/80 transition-colors">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium text-card-foreground truncate">${(g[7] || 'Sin observación').replace(/</g, '&lt;')}</p>
                         <div class="flex items-center gap-2 mt-1.5 flex-wrap">
                             <span class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded font-medium">${(g[6] || '').replace(/</g, '&lt;')}</span>
-                            <span class="text-xs text-muted-foreground">${new Date(g[1]).toLocaleDateString('es')}</span>
+                            <span class="text-xs text-muted-foreground">${formatRelativeDate(g[1])}</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
                         <div class="text-right">
-                            <p class="text-sm font-semibold text-card-foreground">$${parseFloat(g[3] || 0).toFixed(2)}</p>
-                            <p class="text-xs text-muted-foreground">${parseFloat(g[4] || 0).toFixed(2)} Bs</p>
+                            <p class="text-sm font-semibold text-card-foreground">$${usd.toFixed(2)}</p>
+                            <p class="text-xs text-muted-foreground">${ves.toFixed(2)} Bs</p>
                         </div>
                         ${linkImg ? `
                             <a href="${linkImg}" target="_blank" rel="noopener" class="p-2 rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors" title="Ver factura">
@@ -362,9 +479,56 @@ async function cargarHistorial() {
                             <span class="p-2 rounded-md border border-border text-muted-foreground/50" title="Sin imagen"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg></span>
                         `}
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
+        return `<div class="space-y-2"><p class="history-group-title">${groupLabel(key)} — ${items.length} ${items.length === 1 ? 'gasto' : 'gastos'}</p>${rows}</div>`;
+    }).join('');
+}
+
+function getFilteredHistoryData() {
+    const filterCat = (document.getElementById('historyFilterCategory') || {}).value || '';
+    return filterCat ? historyData.filter(g => (g[6] || '') === filterCat) : historyData;
+}
+
+function renderHistorySummary(data) {
+    const summaryEl = document.getElementById('historySummary');
+    if (!data || !data.length) { summaryEl.classList.add('hidden'); return; }
+    const totalUsd = data.reduce((s, g) => s + parseFloat(g[3] || 0), 0);
+    const totalVes = data.reduce((s, g) => s + parseFloat(g[4] || 0), 0);
+    summaryEl.classList.remove('hidden');
+    summaryEl.innerHTML = `
+        <div class="space-y-0.5">
+            <p class="text-xs text-muted-foreground font-medium">Total USD</p>
+            <p class="text-lg font-semibold text-card-foreground">$${totalUsd.toFixed(2)}</p>
+        </div>
+        <div class="space-y-0.5">
+            <p class="text-xs text-muted-foreground font-medium">Total Bs</p>
+            <p class="text-lg font-semibold text-card-foreground">${totalVes.toFixed(2)}</p>
+        </div>
+        <div class="space-y-0.5 col-span-2 sm:col-span-1">
+            <p class="text-xs text-muted-foreground font-medium">Registros</p>
+            <p class="text-lg font-semibold text-card-foreground">${data.length}</p>
+        </div>`;
+}
+
+function cargarHistorialConFiltro() {
+    const filtered = getFilteredHistoryData();
+    renderHistorySummary(filtered);
+    renderHistoryList();
+}
+
+async function cargarHistorial() {
+    const list = document.getElementById('historyList');
+    const summaryEl = document.getElementById('historySummary');
+    list.innerHTML = '<p class="text-center text-sm text-muted-foreground py-8">Cargando...</p>';
+    summaryEl.classList.add('hidden');
+    try {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        historyData = Array.isArray(data) ? data.reverse() : [];
+        const filtered = getFilteredHistoryData();
+        renderHistorySummary(filtered);
+        renderHistoryList();
     } catch (e) {
         list.innerHTML = '<p class="text-center text-sm text-destructive py-8">Error al cargar el historial.</p>';
     }
@@ -377,3 +541,4 @@ function cerrarSesion() {
 </script>
 </body>
 </html>
+
