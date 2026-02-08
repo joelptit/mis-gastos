@@ -3,62 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Pro 1.10</title>
+    <title>Gastos Pro — v1.11</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .active-tab { color: #2563eb; }
-        body { padding-bottom: 70px; }
-        #loader { 
-            display: none; 
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,0.9);
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                        destructive: 'hsl(var(--destructive))',
+                    },
+                    borderRadius: { lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' }
+                }
+            }
         }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --primary: 240 5.9% 10%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --destructive: 0 84.2% 60.2%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 240 5.9% 10%;
+            --radius: 0.5rem;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; padding-bottom: 80px; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+        .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); border: 1px solid hsl(var(--border)); }
+        .btn-secondary:hover { background: hsl(240 4.8% 92%); }
+        .input-base { border: 1px solid hsl(var(--input)); border-radius: var(--radius); background: hsl(var(--background)); }
+        .input-base:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2); border-color: hsl(var(--ring)); }
+        #loader { display: none; position: fixed; inset: 0; background: hsl(var(--background) / 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         #loader.active { display: flex !important; }
+        .nav-btn { color: hsl(var(--muted-foreground)); transition: color 0.15s; }
+        .nav-btn.active { color: hsl(var(--primary)); font-weight: 600; }
+        .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); }
+        .toast { transform: translateY(-100%); opacity: 0; transition: transform 0.25s, opacity 0.25s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="min-h-screen antialiased">
 
-    <div id="loader">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-        <p id="loaderText" class="font-bold text-blue-600 uppercase text-xs">Procesando...</p>
+    <div id="loader" class="loader">
+        <div class="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent"></div>
+        <p id="loaderText" class="text-sm text-muted-foreground mt-3">Procesando...</p>
     </div>
 
-    <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50 p-4">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm">
-            <h2 class="text-2xl font-black text-center mb-6 text-slate-800 tracking-tighter">SISTEMA GASTOS</h2>
-            <input type="email" id="userEmail" class="w-full border p-4 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Email">
-            <input type="password" id="userPass" class="w-full border p-4 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Clave">
-            <button onclick="validarAcceso()" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg">ENTRAR</button>
-            <p id="errorMsg" class="text-red-500 mt-4 hidden text-center font-bold italic text-sm">Datos incorrectos</p>
+    <!-- Toast para mensajes (reemplazo de alert) -->
+    <div id="toast" class="toast fixed top-4 left-4 right-4 z-[100] max-w-lg mx-auto">
+        <div id="toastContent" class="card px-4 py-3 shadow-lg flex items-center gap-3"></div>
+    </div>
+
+    <!-- Login -->
+    <div id="loginScreen" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="card w-full max-w-sm p-6 sm:p-8 shadow-xl">
+            <div class="text-center mb-6">
+                <h1 class="text-xl font-semibold tracking-tight text-card-foreground">Gastos Pro</h1>
+                <p class="text-sm text-muted-foreground mt-1">Inicia sesión para continuar</p>
+            </div>
+            <form onsubmit="validarAcceso(); return false;" class="space-y-4">
+                <div class="space-y-2">
+                    <label for="userEmail" class="text-sm font-medium text-card-foreground">Correo</label>
+                    <input type="email" id="userEmail" class="input-base w-full h-10 px-3 text-sm" placeholder="tu@email.com" required>
+                </div>
+                <div class="space-y-2">
+                    <label for="userPass" class="text-sm font-medium text-card-foreground">Contraseña</label>
+                    <input type="password" id="userPass" class="input-base w-full h-10 px-3 text-sm" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="btnLogin" class="btn-primary w-full h-10 rounded-md text-sm font-medium transition-opacity">
+                    Entrar
+                </button>
+            </form>
+            <p id="errorMsg" class="text-sm text-destructive mt-4 hidden text-center">Correo o contraseña incorrectos.</p>
         </div>
     </div>
 
-    <div id="mainContent" class="hidden max-w-lg mx-auto bg-white min-h-screen shadow-lg relative">
+    <!-- App principal -->
+    <div id="mainContent" class="hidden max-w-lg mx-auto min-h-screen relative">
         <section id="section-home" class="app-section">
-            <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow-md">
-                <span class="font-bold uppercase tracking-tight">Nuevo Registro</span>
-                <span id="tasaBadge" class="text-[10px] bg-blue-800 px-2 py-1 rounded font-mono">Cargando tasa...</span>
+            <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex justify-between items-center">
+                <h2 class="text-base font-semibold text-card-foreground">Nuevo gasto</h2>
+                <span id="tasaBadge" class="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md font-medium">Cargando tasa...</span>
             </header>
-            
-            <form id="formGasto" class="p-4 space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Fecha</label>
-                    <input type="datetime-local" id="fecha" required class="w-full p-3 border rounded-xl bg-slate-50">
+
+            <form id="formGasto" class="p-4 space-y-5">
+                <div class="space-y-2">
+                    <label for="fecha" class="text-sm font-medium text-card-foreground">Fecha</label>
+                    <input type="datetime-local" id="fecha" required class="input-base w-full h-10 px-3 text-sm">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">Usuario</label>
-                        <input type="text" id="usuarioDisplay" readonly class="w-full p-3 border rounded-xl bg-gray-100 text-gray-500 font-bold">
+                    <div class="space-y-2">
+                        <label for="usuarioDisplay" class="text-sm font-medium text-card-foreground">Usuario</label>
+                        <input type="text" id="usuarioDisplay" readonly class="input-base w-full h-10 px-3 text-sm bg-muted text-muted-foreground cursor-not-allowed">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">Categoría</label>
-                        <select id="categoria" class="w-full p-3 border rounded-xl bg-slate-50">
+                    <div class="space-y-2">
+                        <label for="categoria" class="text-sm font-medium text-card-foreground">Categoría</label>
+                        <select id="categoria" class="input-base w-full h-10 px-3 text-sm bg-card">
                             <option>Alimentos</option>
                             <option>Servicios</option>
                             <option>Transporte</option>
@@ -68,66 +131,80 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-bold text-green-600 uppercase">Monto VES</label>
-                        <input type="number" id="ves" step="0.01" oninput="calcularUsd()" class="w-full p-3 border-2 border-green-500 rounded-xl font-bold text-green-700" placeholder="0.00">
+                    <div class="space-y-2">
+                        <label for="ves" class="text-sm font-medium text-card-foreground">Monto (VES)</label>
+                        <input type="number" id="ves" step="0.01" oninput="calcularUsd()" class="input-base w-full h-10 px-3 text-sm" placeholder="0.00">
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-blue-600 uppercase">Monto USD</label>
-                        <input type="number" id="usd" step="0.01" readonly class="w-full p-3 border rounded-xl bg-gray-100 font-bold text-blue-700">
+                    <div class="space-y-2">
+                        <label for="usd" class="text-sm font-medium text-card-foreground">Monto (USD)</label>
+                        <input type="number" id="usd" step="0.01" readonly class="input-base w-full h-10 px-3 text-sm bg-muted text-muted-foreground">
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[10px] font-bold text-gray-400 uppercase">Observación</label>
-                    <input type="text" id="observacion" class="w-full p-3 border rounded-xl bg-slate-50" placeholder="¿En qué se gastó?">
+                <div class="space-y-2">
+                    <label for="observacion" class="text-sm font-medium text-card-foreground">Observación</label>
+                    <input type="text" id="observacion" class="input-base w-full h-10 px-3 text-sm" placeholder="¿En qué se gastó?">
                 </div>
 
-                <div class="border-2 border-dashed p-4 rounded-xl text-center bg-slate-50 border-slate-300">
-                    <label class="cursor-pointer block">
-                        <span class="text-sm font-bold text-blue-600 block">📷 Adjuntar Foto</span>
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-card-foreground">Foto de factura (opcional)</label>
+                    <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-input rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
                         <input type="file" id="archivo" accept="image/*" class="hidden" onchange="procesarImagen(this)">
-                        <p id="fileName" class="text-[10px] text-gray-400 mt-1 italic font-medium">Opcional</p>
+                        <span class="text-sm text-muted-foreground flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span id="fileName">Arrastra una imagen o haz clic</span>
+                        </span>
+                        <img id="preview" class="hidden mt-2 max-h-24 rounded object-cover border border-border">
                     </label>
-                    <img id="preview" class="hidden mt-2 max-h-40 mx-auto rounded-lg shadow-md border-4 border-white">
                 </div>
 
-                <button type="submit" id="btnGuardar" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest text-sm">
-                    Guardar Registro
+                <button type="submit" id="btnGuardar" class="btn-primary w-full h-11 rounded-md text-sm font-medium">
+                    Guardar registro
                 </button>
             </form>
         </section>
 
-        <section id="section-history" class="app-section hidden pb-20">
-            <header class="bg-slate-800 text-white p-4 sticky top-0 z-10 font-bold text-center uppercase tracking-widest">
-                Historial de Gastos
+        <section id="section-history" class="app-section hidden pb-24">
+            <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+                <h2 class="text-base font-semibold text-card-foreground">Historial de gastos</h2>
             </header>
             <div id="historyList" class="p-4 space-y-3"></div>
         </section>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 z-50 max-w-lg mx-auto shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-            <button onclick="switchTab('home')" id="nav-home" class="active-tab flex flex-col items-center">
-                <span class="text-[10px] font-black uppercase">Home</span>
+        <nav class="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around py-3 z-50 max-w-lg mx-auto">
+            <button type="button" onclick="switchTab('home')" id="nav-home" class="nav-btn active flex flex-col items-center gap-1 px-4 py-1 rounded-md hover:bg-muted/50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                <span class="text-xs font-medium">Nuevo</span>
             </button>
-            <button onclick="switchTab('history')" id="nav-history" class="text-gray-400 flex flex-col items-center">
-                <span class="text-[10px] font-black uppercase">Historial</span>
+            <button type="button" onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center gap-1 px-4 py-1 rounded-md hover:bg-muted/50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                <span class="text-xs font-medium">Historial</span>
             </button>
-            <button onclick="cerrarSesion()" class="text-red-500 flex flex-col items-center">
-                <span class="text-[10px] font-black uppercase">Salir</span>
+            <button type="button" onclick="cerrarSesion()" class="nav-btn flex flex-col items-center gap-1 px-4 py-1 text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H4a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="text-xs font-medium">Salir</span>
             </button>
         </nav>
     </div>
 
 <script>
-// URL de tu Google Apps Script
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0uszzl0MawDgb0RuzD1bfyxiB137Agedy_2iWBzsgC1ZH0EFfbTrXUlPU3vRSAn6o8Q/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0uszzl0MawDgb0RuzD1bfyxiB137Agedy_2iWBzsgC1ZH0EFfbTrXUlPU3vRSAn6o8Q/exec";
 let tasaActual = 40;
 let imgB64 = null;
 
+function showToast(message, type) {
+    const toast = document.getElementById('toast');
+    const content = document.getElementById('toastContent');
+    content.innerHTML = type === 'success'
+        ? `<span class="text-green-600">✓</span><span class="text-sm text-card-foreground">${message}</span>`
+        : `<span class="text-destructive">✕</span><span class="text-sm text-card-foreground">${message}</span>`;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
 window.onload = () => {
     const sesion = localStorage.getItem('session');
-    if(sesion) mostrarApp(JSON.parse(sesion).nombre);
-    
+    if (sesion) mostrarApp(JSON.parse(sesion).nombre);
     const ahora = new Date();
     ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
     document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
@@ -139,9 +216,9 @@ async function obtenerTasa() {
         const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
         const data = await res.json();
         tasaActual = data.tasa;
-        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
-    } catch(e) { 
-        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS"; 
+        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " Bs";
+    } catch (e) {
+        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " Bs";
     }
 }
 
@@ -159,14 +236,13 @@ function procesarImagen(input) {
                 const canvas = document.createElement('canvas');
                 const MAX = 800;
                 let w = img.width, h = img.height;
-                if (w > h && w > MAX) { h *= MAX/w; w = MAX; }
-                else if (h > MAX) { w *= MAX/h; h = MAX; }
+                if (w > h && w > MAX) { h *= MAX / w; w = MAX; } else if (h > MAX) { w *= MAX / h; h = MAX; }
                 canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                 imgB64 = canvas.toDataURL('image/jpeg', 0.7);
                 document.getElementById('preview').src = imgB64;
                 document.getElementById('preview').classList.remove('hidden');
-                document.getElementById('fileName').innerText = "Imagen adjunta";
+                document.getElementById('fileName').innerText = "Imagen lista";
             };
             img.src = e.target.result;
         };
@@ -175,20 +251,26 @@ function procesarImagen(input) {
 }
 
 async function validarAcceso() {
-    const email = document.getElementById('userEmail').value;
+    const email = document.getElementById('userEmail').value.trim();
     const clave = document.getElementById('userPass').value;
-    if(!email || !clave) return alert("Completa los datos");
+    if (!email || !clave) {
+        showToast("Completa correo y contraseña.", "error");
+        return;
+    }
     document.getElementById('loader').classList.add('active');
+    document.getElementById('errorMsg').classList.add('hidden');
     try {
-        const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${email}&clave=${clave}`);
+        const res = await fetch(`${WEB_APP_URL}?action=validarUsuario&email=${encodeURIComponent(email)}&clave=${encodeURIComponent(clave)}`);
         const data = await res.json();
-        if(data.status === 'success') {
+        if (data.status === 'success') {
             localStorage.setItem('session', JSON.stringify(data));
             mostrarApp(data.nombre);
         } else {
             document.getElementById('errorMsg').classList.remove('hidden');
         }
-    } catch(e) { alert("Error de red"); }
+    } catch (e) {
+        showToast("Error de red. Revisa tu conexión.", "error");
+    }
     document.getElementById('loader').classList.remove('active');
 }
 
@@ -198,7 +280,6 @@ function mostrarApp(nombre) {
     document.getElementById('usuarioDisplay').value = nombre;
 }
 
-// LÓGICA DE ENVÍO CORREGIDA
 document.getElementById('formGasto').onsubmit = async (e) => {
     e.preventDefault();
     const loader = document.getElementById('loader');
@@ -215,26 +296,21 @@ document.getElementById('formGasto').onsubmit = async (e) => {
     };
 
     try {
-        const res = await fetch(WEB_APP_URL, { 
-            method: 'POST', 
-            body: JSON.stringify(payload) 
-        });
-        
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
         const data = await res.json();
 
         if (data.status === "success") {
             const msg = data.imageWarning
-              ? "✅ Registro guardado. ⚠️ La imagen no pudo subirse: " + data.imageWarning
-              : "✅ Registro exitoso";
-            alert(msg);
+                ? "Registro guardado. La imagen no pudo subirse."
+                : "Registro guardado correctamente.";
+            showToast(msg, data.imageWarning ? "error" : "success");
             imgB64 = null;
-            location.reload();
-        } else { 
-            // Esto mostrará el error que venga del servidor (ImgBB o Sheets)
-            throw new Error(data.message || "Error desconocido en el servidor"); 
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            throw new Error(data.message || "Error en el servidor");
         }
-    } catch (err) { 
-        alert("❌ Error: " + err.message); 
+    } catch (err) {
+        showToast(err.message || "Error al guardar", "error");
     } finally {
         loader.classList.remove('active');
     }
@@ -243,55 +319,61 @@ document.getElementById('formGasto').onsubmit = async (e) => {
 function switchTab(t) {
     document.querySelectorAll('.app-section').forEach(s => s.classList.add('hidden'));
     document.getElementById('section-' + t).classList.remove('hidden');
-    document.querySelectorAll('nav button').forEach(b => b.classList.replace('active-tab', 'text-gray-400'));
-    document.getElementById('nav-' + t).classList.replace('text-gray-400', 'active-tab');
-    if(t === 'history') cargarHistorial();
+    document.querySelectorAll('nav button').forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('nav-btn');
+    });
+    const activeBtn = document.getElementById('nav-' + t);
+    if (activeBtn) activeBtn.classList.add('active');
+    if (t === 'history') cargarHistorial();
 }
 
 async function cargarHistorial() {
     const list = document.getElementById('historyList');
-    list.innerHTML = `<p class="text-center font-bold text-slate-400 animate-pulse">Cargando...</p>`;
+    list.innerHTML = '<p class="text-center text-sm text-muted-foreground py-8">Cargando...</p>';
     try {
         const res = await fetch(WEB_APP_URL);
         const data = await res.json();
+        if (!data || !data.length) {
+            list.innerHTML = '<p class="text-center text-sm text-muted-foreground py-8">No hay registros aún.</p>';
+            return;
+        }
         list.innerHTML = data.reverse().map(g => {
             const linkImg = g[5] && g[5].startsWith('http') ? g[5] : null;
             return `
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center shadow-sm">
-                    <div class="flex-1">
-                        <p class="font-black text-slate-800 uppercase text-sm leading-tight">${g[7] || 'Sin obs.'}</p>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md font-bold uppercase">${g[6]}</span>
-                            <span class="text-[10px] text-slate-400 font-medium">${new Date(g[1]).toLocaleDateString()}</span>
+                <div class="card p-4 flex items-center gap-4">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-card-foreground truncate">${(g[7] || 'Sin observación').replace(/</g, '&lt;')}</p>
+                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded font-medium">${(g[6] || '').replace(/</g, '&lt;')}</span>
+                            <span class="text-xs text-muted-foreground">${new Date(g[1]).toLocaleDateString('es')}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 shrink-0">
                         <div class="text-right">
-                            <p class="text-blue-600 font-black text-lg leading-none">$${parseFloat(g[3]).toFixed(2)}</p>
-                            <p class="text-[10px] text-green-600 font-bold">${parseFloat(g[4]).toFixed(2)} BS</p>
+                            <p class="text-sm font-semibold text-card-foreground">$${parseFloat(g[3] || 0).toFixed(2)}</p>
+                            <p class="text-xs text-muted-foreground">${parseFloat(g[4] || 0).toFixed(2)} Bs</p>
                         </div>
                         ${linkImg ? `
-                            <a href="${linkImg}" target="_blank" class="bg-blue-50 p-2 rounded-full border border-blue-100 text-blue-500 hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
+                            <a href="${linkImg}" target="_blank" rel="noopener" class="p-2 rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-card-foreground transition-colors" title="Ver factura">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
                             </a>
                         ` : `
-                            <div class="p-2 text-slate-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                </svg>
-                            </div>
+                            <span class="p-2 rounded-md border border-border text-muted-foreground/50" title="Sin imagen"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg></span>
                         `}
                     </div>
                 </div>
             `;
         }).join('');
-    } catch(e) { list.innerHTML = "Error de carga."; }
+    } catch (e) {
+        list.innerHTML = '<p class="text-center text-sm text-destructive py-8">Error al cargar el historial.</p>';
+    }
 }
 
-function cerrarSesion() { localStorage.clear(); location.reload(); }
+function cerrarSesion() {
+    localStorage.clear();
+    location.reload();
+}
 </script>
 </body>
 </html>
