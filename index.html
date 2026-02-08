@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Pro 1.07</title>
+    <title>Gastos Pro 1.08</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .active-tab { color: #2563eb; }
@@ -119,13 +119,15 @@
     </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYLk88Ao6doEbVqoeFbit45QtrE35CZ95TMfcN_oiM37ncM1TzUHb83fwp6QFd1zIYXw/exec"; 
+// URL de tu Google Apps Script
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby1iHUbA6h85d583bXTxXAh4WIMye3B9V-UybFNob6NCUieexNK04v9l0z9j6-ZHGP0KA/exec"; 
 let tasaActual = 40;
 let imgB64 = null;
 
 window.onload = () => {
     const sesion = localStorage.getItem('session');
     if(sesion) mostrarApp(JSON.parse(sesion).nombre);
+    
     const ahora = new Date();
     ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
     document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
@@ -138,7 +140,9 @@ async function obtenerTasa() {
         const data = await res.json();
         tasaActual = data.tasa;
         document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS";
-    } catch(e) { document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS"; }
+    } catch(e) { 
+        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " BS"; 
+    }
 }
 
 function calcularUsd() {
@@ -194,10 +198,12 @@ function mostrarApp(nombre) {
     document.getElementById('usuarioDisplay').value = nombre;
 }
 
+// LÓGICA DE ENVÍO CORREGIDA
 document.getElementById('formGasto').onsubmit = async (e) => {
     e.preventDefault();
     const loader = document.getElementById('loader');
     loader.classList.add('active');
+
     const payload = {
         fecha: document.getElementById('fecha').value,
         usuario: document.getElementById('usuarioDisplay').value,
@@ -207,15 +213,28 @@ document.getElementById('formGasto').onsubmit = async (e) => {
         observacion: document.getElementById('observacion').value,
         archivoB64: imgB64
     };
+
     try {
-        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(payload) 
+        });
+        
         const data = await res.json();
+
         if (data.status === "success") {
             alert("✅ Registro exitoso");
-            location.reload();
-        } else { throw data.message; }
-    } catch (err) { alert("❌ Error: " + err); }
-    loader.classList.remove('active');
+            imgB64 = null; // Limpiar la imagen de la memoria
+            location.reload(); // Recargar para limpiar formulario y actualizar lista
+        } else { 
+            // Esto mostrará el error que venga del servidor (ImgBB o Sheets)
+            throw new Error(data.message || "Error desconocido en el servidor"); 
+        }
+    } catch (err) { 
+        alert("❌ Error: " + err.message); 
+    } finally {
+        loader.classList.remove('active');
+    }
 };
 
 function switchTab(t) {
