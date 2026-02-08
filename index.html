@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Pro 1.08</title>
+    <title>Gastos Pro 1.09</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .active-tab { color: #2563eb; }
@@ -120,7 +120,7 @@
 
 <script>
 // URL de tu Google Apps Script
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby1iHUbA6h85d583bXTxXAh4WIMye3B9V-UybFNob6NCUieexNK04v9l0z9j6-ZHGP0KA/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbywC7enmpDIxhbA9SFsUfnogWH_ww4ReFU353SzYOB_tuAu8wRLKQXuzMf6rL4xTSeHEg/exec"; 
 let tasaActual = 40;
 let imgB64 = null;
 
@@ -223,9 +223,12 @@ document.getElementById('formGasto').onsubmit = async (e) => {
         const data = await res.json();
 
         if (data.status === "success") {
-            alert("✅ Registro exitoso");
-            imgB64 = null; // Limpiar la imagen de la memoria
-            location.reload(); // Recargar para limpiar formulario y actualizar lista
+            const msg = data.imageWarning
+              ? "✅ Registro guardado. ⚠️ La imagen no pudo subirse: " + data.imageWarning
+              : "✅ Registro exitoso";
+            alert(msg);
+            imgB64 = null;
+            location.reload();
         } else { 
             // Esto mostrará el error que venga del servidor (ImgBB o Sheets)
             throw new Error(data.message || "Error desconocido en el servidor"); 
