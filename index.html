@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gastos Pro — v1.11</title>
+    <title>Gastos Pro — v1.12</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -131,13 +131,41 @@
             <header class="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex justify-between items-center">
                 <h2 class="text-base font-semibold text-card-foreground">Nuevo gasto</h2>
                 <div class="flex items-center gap-2">
-                    <span id="tasaBadge" class="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-md font-medium">Cargando tasa...</span>
+                    <button type="button" onclick="abrirModalTasa()" id="tasaBadge" class="text-xs text-muted-foreground bg-muted hover:bg-muted/80 px-2.5 py-1 rounded-md font-medium transition-colors" title="Ver o editar tasa">Cargando tasa...</button>
                     <button type="button" id="themeToggleHome" class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
                         <svg id="iconSunHome" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                         <svg id="iconMoonHome" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                     </button>
                 </div>
             </header>
+
+            <!-- Modal Tasa -->
+            <div id="modalTasa" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onclick="if(event.target===this) cerrarModalTasa()">
+                <div class="card w-full max-w-sm p-4 shadow-xl" onclick="event.stopPropagation()">
+                    <h3 class="text-base font-semibold text-card-foreground mb-3">Tasa del dólar (Bs)</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="number" id="inputTasa" step="0.01" min="0.01" class="input-base flex-1 h-10 px-3 text-sm" placeholder="Ej: 40">
+                        <button type="button" onclick="guardarTasaManual()" class="btn-primary h-10 px-4 rounded-md text-sm font-medium">Guardar</button>
+                    </div>
+                    <button type="button" onclick="obtenerTasaBCV()" class="btn-secondary w-full h-10 rounded-md text-sm font-medium mb-2">
+                        Obtener tasa oficial BCV
+                    </button>
+                    <p id="tasaBCVMsg" class="text-xs text-muted-foreground hidden"></p>
+                    <button type="button" onclick="cerrarModalTasa()" class="w-full mt-2 text-sm text-muted-foreground hover:text-card-foreground">Cerrar</button>
+                </div>
+            </div>
+
+            <!-- Modal Nueva Categoría -->
+            <div id="modalNuevaCategoria" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onclick="if(event.target===this) cerrarModalNuevaCategoria()">
+                <div class="card w-full max-w-sm p-4 shadow-xl" onclick="event.stopPropagation()">
+                    <h3 class="text-base font-semibold text-card-foreground mb-3">Nueva categoría</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="inputNuevaCategoria" class="input-base flex-1 h-10 px-3 text-sm" placeholder="Nombre" maxlength="50">
+                        <button type="button" onclick="agregarCategoria()" class="btn-primary h-10 px-4 rounded-md text-sm font-medium">Agregar</button>
+                    </div>
+                    <button type="button" onclick="cerrarModalNuevaCategoria()" class="w-full text-sm text-muted-foreground hover:text-card-foreground">Cerrar</button>
+                </div>
+            </div>
 
             <form id="formGasto" class="p-4 space-y-5">
                 <div class="space-y-2">
@@ -152,12 +180,10 @@
                     </div>
                     <div class="space-y-2">
                         <label for="categoria" class="text-sm font-medium text-card-foreground">Categoría</label>
-                        <select id="categoria" class="input-base w-full h-10 px-3 text-sm bg-card">
-                            <option>Alimentos</option>
-                            <option>Servicios</option>
-                            <option>Transporte</option>
-                            <option>Varios</option>
-                        </select>
+                        <div class="flex gap-2">
+                            <select id="categoria" class="input-base flex-1 h-10 px-3 text-sm bg-card"></select>
+                            <button type="button" onclick="abrirModalNuevaCategoria()" class="btn-secondary shrink-0 h-10 px-3 rounded-md text-sm font-medium" title="Agregar categoría">+</button>
+                        </div>
                     </div>
                 </div>
 
@@ -205,15 +231,17 @@
             </header>
             <div class="p-4 space-y-4">
                 <div id="historySummary" class="card p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 hidden"></div>
-                <div class="flex flex-wrap gap-2 items-center">
-                    <span class="text-sm font-medium text-card-foreground">Categoría:</span>
-                    <select id="historyFilterCategory" class="input-base h-9 px-3 text-sm w-full max-w-[180px]" onchange="cargarHistorialConFiltro()">
-                        <option value="">Todas</option>
-                        <option value="Alimentos">Alimentos</option>
-                        <option value="Servicios">Servicios</option>
-                        <option value="Transporte">Transporte</option>
-                        <option value="Varios">Varios</option>
-                    </select>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-card-foreground">Categoría:</span>
+                        <select id="historyFilterCategory" class="input-base h-9 px-3 text-sm w-full max-w-[160px]" onchange="cargarHistorialConFiltro()"></select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-card-foreground">Usuario:</span>
+                        <select id="historyFilterUsuario" class="input-base h-9 px-3 text-sm w-full max-w-[160px]" onchange="cargarHistorialConFiltro()">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="historyList" class="space-y-4"></div>
             </div>
@@ -236,7 +264,7 @@
     </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz0uszzl0MawDgb0RuzD1bfyxiB137Agedy_2iWBzsgC1ZH0EFfbTrXUlPU3vRSAn6o8Q/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxxLtbyvHzbR76aOl7eMVCl5esqlV6iv-SIWFqKNnzZRlkRMZc7juFswDtrKQhXNx__PA/exec";
 let tasaActual = 40;
 let imgB64 = null;
 let historyData = [];
@@ -281,7 +309,10 @@ function showToast(message, type) {
 window.onload = () => {
     setTheme(getTheme());
     const sesion = localStorage.getItem('session');
-    if (sesion) mostrarApp(JSON.parse(sesion).nombre);
+    if (sesion) {
+        mostrarApp(JSON.parse(sesion).nombre);
+        obtenerCategorias();
+    }
     const ahora = new Date();
     ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
     document.getElementById('fecha').value = ahora.toISOString().slice(0, 16);
@@ -293,10 +324,121 @@ async function obtenerTasa() {
         const res = await fetch(`${WEB_APP_URL}?action=getTasa`);
         const data = await res.json();
         tasaActual = data.tasa;
-        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " Bs";
+        actualizarBadgeTasa();
     } catch (e) {
-        document.getElementById('tasaBadge').innerText = "Tasa: " + tasaActual + " Bs";
+        actualizarBadgeTasa();
     }
+}
+
+function actualizarBadgeTasa() {
+    const el = document.getElementById('tasaBadge');
+    if (el) el.innerText = "Tasa: " + tasaActual + " Bs";
+}
+
+async function obtenerCategorias() {
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=getCategorias`);
+        const data = await res.json();
+        const cats = data.categorias || [];
+        llenarSelectCategorias(cats);
+    } catch (e) {
+        llenarSelectCategorias(["Alimentos", "Servicios", "Transporte", "Varios"]);
+    }
+}
+
+function llenarSelectCategorias(cats) {
+    const opts = cats.map(c => `<option value="${(c || '').replace(/"/g, '&quot;')}">${(c || '').replace(/</g, '&lt;')}</option>`).join('');
+    const selForm = document.getElementById('categoria');
+    const selHist = document.getElementById('historyFilterCategory');
+    if (selForm) selForm.innerHTML = opts;
+    if (selHist) selHist.innerHTML = '<option value="">Todas</option>' + opts;
+}
+
+function abrirModalTasa() {
+    document.getElementById('inputTasa').value = tasaActual;
+    document.getElementById('modalTasa').classList.remove('hidden');
+    document.getElementById('tasaBCVMsg').classList.add('hidden');
+}
+
+function cerrarModalTasa() {
+    document.getElementById('modalTasa').classList.add('hidden');
+}
+
+async function guardarTasaManual() {
+    const input = document.getElementById('inputTasa');
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) {
+        showToast("Escribe una tasa válida.", "error");
+        return;
+    }
+    const loader = document.getElementById('loader');
+    loader.classList.add('active');
+    try {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'setTasa', tasa: val }) });
+        const data = await res.json();
+        if (data.status === 'success') {
+            tasaActual = data.tasa;
+            actualizarBadgeTasa();
+            cerrarModalTasa();
+            showToast("Tasa guardada.", "success");
+        } else throw new Error(data.message || "Error");
+    } catch (e) {
+        showToast(e.message || "Error al guardar tasa", "error");
+    }
+    loader.classList.remove('active');
+}
+
+async function obtenerTasaBCV() {
+    const msgEl = document.getElementById('tasaBCVMsg');
+    msgEl.classList.remove('hidden');
+    msgEl.textContent = "Consultando BCV...";
+    try {
+        const res = await fetch(`${WEB_APP_URL}?action=getTasaBCV`);
+        const data = await res.json();
+        if (data.status === 'success') {
+            tasaActual = data.tasa;
+            actualizarBadgeTasa();
+            document.getElementById('inputTasa').value = tasaActual;
+            msgEl.textContent = "Tasa BCV actualizada: " + tasaActual + " Bs";
+        } else {
+            msgEl.textContent = data.message || "No se pudo obtener la tasa.";
+        }
+    } catch (e) {
+        msgEl.textContent = "Error de conexión.";
+    }
+}
+
+function abrirModalNuevaCategoria() {
+    document.getElementById('inputNuevaCategoria').value = '';
+    document.getElementById('modalNuevaCategoria').classList.remove('hidden');
+}
+
+function cerrarModalNuevaCategoria() {
+    document.getElementById('modalNuevaCategoria').classList.add('hidden');
+}
+
+async function agregarCategoria() {
+    const input = document.getElementById('inputNuevaCategoria');
+    const nombre = (input.value || '').trim();
+    if (!nombre) {
+        showToast("Escribe el nombre de la categoría.", "error");
+        return;
+    }
+    const loader = document.getElementById('loader');
+    loader.classList.add('active');
+    try {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'addCategoria', nombre: nombre }) });
+        const data = await res.json();
+        if (data.status === 'success') {
+            llenarSelectCategorias(data.categorias || []);
+            input.value = '';
+            cerrarModalNuevaCategoria();
+            showToast("Categoría agregada.", "success");
+        } else throw new Error(data.message || "Error");
+    } catch (e) {
+        showToast(e.message || "Error al agregar", "error");
+    }
+    loader.classList.remove('active');
 }
 
 function calcularUsd() {
@@ -355,6 +497,7 @@ function mostrarApp(nombre) {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
     document.getElementById('usuarioDisplay').value = nombre;
+    obtenerCategorias();
 }
 
 document.getElementById('formGasto').onsubmit = async (e) => {
@@ -422,13 +565,16 @@ function renderHistoryList() {
     const list = document.getElementById('historyList');
     const filtered = getFilteredHistoryData();
     if (!filtered.length) {
+        const noData = historyData.length === 0;
+        const msg = noData ? 'No hay registros aún' : 'No hay gastos con los filtros seleccionados';
+        const sub = noData ? 'Añade el primero desde Nuevo' : 'Prueba otra categoría o usuario';
         list.innerHTML = `
             <div class="text-center py-12">
                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted text-muted-foreground mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                 </div>
-                <p class="text-sm font-medium text-card-foreground">${filterCat ? 'No hay gastos en esta categoría' : 'No hay registros aún'}</p>
-                <p class="text-xs text-muted-foreground mt-1">${filterCat ? 'Prueba otra categoría' : 'Añade el primero desde Nuevo'}</p>
+                <p class="text-sm font-medium text-card-foreground">${msg}</p>
+                <p class="text-xs text-muted-foreground mt-1">${sub}</p>
             </div>`;
         return;
     }
@@ -487,7 +633,12 @@ function renderHistoryList() {
 
 function getFilteredHistoryData() {
     const filterCat = (document.getElementById('historyFilterCategory') || {}).value || '';
-    return filterCat ? historyData.filter(g => (g[6] || '') === filterCat) : historyData;
+    const filterUser = (document.getElementById('historyFilterUsuario') || {}).value || '';
+    return historyData.filter(g => {
+        if (filterCat && (g[6] || '') !== filterCat) return false;
+        if (filterUser && (g[2] || '') !== filterUser) return false;
+        return true;
+    });
 }
 
 function renderHistorySummary(data) {
@@ -511,6 +662,16 @@ function renderHistorySummary(data) {
         </div>`;
 }
 
+function llenarFiltroUsuarios() {
+    const set = new Set();
+    historyData.forEach(g => { const u = (g[2] || '').toString().trim(); if (u) set.add(u); });
+    const users = Array.from(set).sort();
+    const sel = document.getElementById('historyFilterUsuario');
+    if (!sel) return;
+    const opts = '<option value="">Todos</option>' + users.map(u => `<option value="${(u || '').replace(/"/g, '&quot;')}">${(u || '').replace(/</g, '&lt;')}</option>`).join('');
+    sel.innerHTML = opts;
+}
+
 function cargarHistorialConFiltro() {
     const filtered = getFilteredHistoryData();
     renderHistorySummary(filtered);
@@ -526,6 +687,7 @@ async function cargarHistorial() {
         const res = await fetch(WEB_APP_URL);
         const data = await res.json();
         historyData = Array.isArray(data) ? data.reverse() : [];
+        llenarFiltroUsuarios();
         const filtered = getFilteredHistoryData();
         renderHistorySummary(filtered);
         renderHistoryList();
@@ -541,4 +703,3 @@ function cerrarSesion() {
 </script>
 </body>
 </html>
-
